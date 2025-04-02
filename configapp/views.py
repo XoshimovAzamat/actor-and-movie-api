@@ -13,6 +13,7 @@ def movie_api(request):
         movies = Movie.objects.all()
         serializer = MovieSerializer(movies, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+
     if request.method == "POST":
         serializer = MovieSerializer(data=request.data)
         if serializer.is_valid():
@@ -20,12 +21,14 @@ def movie_api(request):
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+
 @api_view(["GET", "POST"])
 def actor_api(request):
     if request.method == "GET":
         actors = Actors.objects.all()
         serializer = ActorSerializer(actors, many=True)
         return Response(data=serializer.data, status=status.HTTP_200_OK)
+
     if request.method == "POST":
         serializer = ActorSerializer(data=request.data)
         if serializer.is_valid():
@@ -34,58 +37,81 @@ def actor_api(request):
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(["PUT", "PATCH", "DELETE"])
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
 def movie_detail(request, slug):
     try:
         movie = Movie.objects.get(slug=slug)
+    except Movie.DoesNotExist:
+        return Response(
+            data={"status": False, "error": "Movie not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
-        response = {"status": True}
-    except Exception as e:
-        response["error"] = e
-        return Response(data=response, status=status.HTTP_417_EXPECTATION_FAILED)
     if request.method == "GET":
         serializer = MovieSerializer(movie)
-        response["data"] = serializer
-        return Response(data=response, status=status.HTTP_200_OK)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
     elif request.method == "PUT":
         serializer = MovieSerializer(movie, data=request.data)
-        if serializer.is_valid(raise_exception=True):
+        if serializer.is_valid():
             serializer.save()
-            response["data"] = serializer
-            return Response(data=response, status=status.HTTP_201_CREATED)
-        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    elif request.method == "PATCH":
-        serializer = MovieSerializer(movie, data=request.data, partial=True)
-        if serializer.is_valid(raise_exception=True):
-            serializer.save()
-            response["data"] = serializer
-            return Response(data=response, status=status.HTTP_201_CREATED)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(["PUT", "PATCH", "DELETE"])
+    elif request.method == "PATCH":
+        serializer = MovieSerializer(movie, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+        return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == "DELETE":
+        movie.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["GET", "PUT", "PATCH", "DELETE"])
 def actor_detail(request, slug):
     try:
         actor = Actors.objects.get(slug=slug)
+    except Actors.DoesNotExist:
+        return Response(
+            data={"status": False, "error": "Actor not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
-        response = {"status": True}
-    except Exception as e:
-        response["error"] = e
-        return Response(data=response, status=status.HTTP_417_EXPECTATION_FAILED)
     if request.method == "GET":
         serializer = ActorSerializer(actor)
-        response["data"] = serializer
-        return Response(data=response, status=status.HTTP_200_OK)
+        return Response(data=serializer.data, status=status.HTTP_200_OK)
+
     elif request.method == "PUT":
-        serializer = ActorSerializer(movie, data=request.data)
-        if serializer.is_valid(raise_exception=True):
+        serializer = ActorSerializer(actor, data=request.data)
+        if serializer.is_valid():
             serializer.save()
-            response["data"] = serializer
-            return Response(data=response, status=status.HTTP_201_CREATED)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     elif request.method == "PATCH":
-        serializer = ActorSerializer(movie, data=request.data, partial=True)
-        if serializer.is_valid(raise_exception=True):
+        serializer = ActorSerializer(actor, data=request.data, partial=True)
+        if serializer.is_valid():
             serializer.save()
-            response["data"] = serializer
-            return Response(data=response, status=status.HTTP_201_CREATED)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == "DELETE":
+        actor.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(['POST'])
+def ism_api(request):
+    try:
+        ism = request.data['ism']
+        fam = request.data['fam']
+        yil = request.data['yil']
+        return Response(data={'message': f'Salom {fam} {ism}, yili: {yil}'})
+    except KeyError as e:
+        return Response(
+            data={'error': f'Majburiy maydon yetishmayapti: {str(e)}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
