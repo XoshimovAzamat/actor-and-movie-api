@@ -12,7 +12,7 @@ from configapp.models import Movie, Actors
 #     class Meta:
 #         model = Actors
 #         fields = '__all__'
-#
+
 
 
 class MovieSerializer(serializers.Serializer):
@@ -33,5 +33,27 @@ class MovieSerializer(serializers.Serializer):
         instance.title = validated_data.get('title', instance.title)
         instance.year = validated_data.get('year', instance.year)
         instance.genre = validated_data.get('genre', instance.genre)
+        instance.save()
+        return instance
+
+
+class ActorSerializer(serializers.Serializer):
+    id = serializers.IntegerField(read_only=True)
+    name = serializers.CharField(max_length=50)
+    birth_date = serializers.DateField()
+    slug = serializers.SlugField(read_only=True)  # Agar modelda slug maydoni bo'lsa
+
+    def create(self, validated_data):
+        """
+        Actors obyektini yaratish uchun
+        """
+        return Actors.objects.create(**validated_data)
+
+    def update(self, instance, validated_data):
+        """
+        Actors obyektini yangilash uchun
+        """
+        instance.name = validated_data.get('name', instance.name)
+        instance.birth_date = validated_data.get('birth_date', instance.birth_date)
         instance.save()
         return instance
